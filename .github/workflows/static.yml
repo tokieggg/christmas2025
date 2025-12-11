@@ -1,27 +1,25 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Deploy Vite + React app to GitHub Pages
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Runs on pushes to the default branch
   push:
     branches: ["main"]
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows manual run from Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Permissions for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow only one deployment at a time
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -34,24 +32,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # LTS as of 2025; matches your README prereq
-          cache: 'npm'  # Caches node_modules for faster runs
+          node-version: '20'
+          cache: 'npm'  # Speeds up installs
 
+      # CHANGED: Use npm install instead of npm ci (no lockfile needed)
       - name: Install dependencies
-        run: npm ci  # Cleaner/faster than npm install; uses package-lock.json
+        run: npm install
 
+      # Build the app (creates /dist with static files)
       - name: Build
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # Optional: If you add this as a repo secret
         run: npm run build
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # Optional, only if you use it
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5  # Updated to latest
+        uses: actions/configure-pages@v5
 
+      # Upload only the built files
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload built static files only (not source)
           path: './dist'
 
       - name: Deploy to GitHub Pages
