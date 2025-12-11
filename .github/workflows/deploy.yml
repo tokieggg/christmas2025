@@ -29,15 +29,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # Cache disabled to avoid hidden npm ci that requires package-lock.json
 
       - name: Install dependencies
-        run: npm install  # This is the key — NO lockfile needed!
+        run: npm install
 
       - name: Build
         run: npm run build
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # Optional - remove if not needed
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
