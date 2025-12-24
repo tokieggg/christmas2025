@@ -1,40 +1,58 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Scene } from './components/Scene';
-import { UI } from './components/UI';
-import { TreeState } from './types';
+import { OrbitControls, Environment, Stars } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import ChristmasTree from './components/ChristmasTree';
+import './App.css'; // We'll add some CSS
 
-const App: React.FC = () => {
-  const [treeState, setTreeState] = useState<TreeState>(TreeState.TREE_SHAPE);
-
-  const toggleState = () => {
-    setTreeState((prev) => 
-      prev === TreeState.TREE_SHAPE ? TreeState.SCATTERED : TreeState.TREE_SHAPE
-    );
-  };
+function App() {
+  const [state, setState] = useState<'SCATTERED' | 'TREE_SHAPE'>('TREE_SHAPE');
+  const [personName, setPersonName] = useState('Mary'); // Default example
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
-      {/* 3D Canvas */}
-      <div className="absolute inset-0 z-0">
-        <Canvas
-          shadows
-          dpr={[1, 2]} // Quality scaling for high-res screens
-          gl={{ 
-            antialias: false, // Post-processing handles AA better usually, or we turn it off for perf with Bloom
-            toneMapping: 3, // ACESFilmic
-            toneMappingExposure: 1.2
-          }}
-          camera={{ position: [0, 0, 25], fov: 45 }}
+    <>
+      <div className="ui-overlay">
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="Enter a name (e.g. Mary)"
+            value={personName}
+            onChange={(e) => setPersonName(e.target.value.trim() || 'Mary')}
+            onKeyDown={(e) => e.key === 'Enter' && setState('SCATTERED')}
+          />
+          <button onClick={() => setPersonName(personName || 'Mary')}>
+            Apply Name
+          </button>
+        </div>
+
+        <button
+          className="toggle-button"
+          onClick={() => setState(prev => prev === 'SCATTERED' ? 'TREE_SHAPE' : 'SCATTERED')}
         >
-          <Scene treeState={treeState} />
-        </Canvas>
+          {state === 'TREE_SHAPE' ? `Reveal "Merry Christmas ${personName}"` : 'Form Christmas Tree'}
+        </button>
+
+        <p className="instruction">
+          {state === 'TREE_SHAPE'
+            ? 'Click the button to scatter into your personalized greeting'
+            : 'Click again to reform the luxurious tree'}
+        </p>
       </div>
 
-      {/* UI Overlay */}
-      <UI currentState={treeState} onToggle={toggleState} />
-    </div>
+      <Canvas camera={{ position: [0, 0, 12], fov: 50 }}>
+        <color attach="background" args={['#001a00']} />
+        <ambientLight intensity={0.4} color="#ffd700" />
+        <pointLight position={[0, 10, 10]} intensity={2} color="#ffd700" />
+        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+        <ChristmasTree state={state} personName={personName} />
+        <OrbitControls enablePan={false} minDistance={8} maxDistance={20} />
+        <Environment preset="night" />
+        <EffectComposer>
+          <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} intensity={1.5} />
+        </EffectComposer>
+      </Canvas>
+    </>
   );
-};
+}
 
 export default App;
