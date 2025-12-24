@@ -3,11 +3,11 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import ChristmasTree from './components/ChristmasTree';
-import './App.css'; // We'll add some CSS
+import './index.css'; // Assuming you use index.css for styles
 
 function App() {
   const [state, setState] = useState<'SCATTERED' | 'TREE_SHAPE'>('TREE_SHAPE');
-  const [personName, setPersonName] = useState('Mary'); // Default example
+  const [personName, setPersonName] = useState('');
 
   return (
     <>
@@ -15,27 +15,23 @@ function App() {
         <div className="input-group">
           <input
             type="text"
-            placeholder="Enter a name (e.g. Mary)"
+            placeholder="Enter a name, e.g. Tom"
             value={personName}
-            onChange={(e) => setPersonName(e.target.value.trim() || 'Mary')}
-            onKeyDown={(e) => e.key === 'Enter' && setState('SCATTERED')}
+            onChange={(e) => setPersonName(e.target.value.trim())}
           />
-          <button onClick={() => setPersonName(personName || 'Mary')}>
-            Apply Name
-          </button>
         </div>
 
         <button
           className="toggle-button"
           onClick={() => setState(prev => prev === 'SCATTERED' ? 'TREE_SHAPE' : 'SCATTERED')}
         >
-          {state === 'TREE_SHAPE' ? `Reveal "Merry Christmas ${personName}"` : 'Form Christmas Tree'}
+          {state === 'TREE_SHAPE' 
+            ? (personName ? `Reveal "Merry Christmas ${personName}"` : 'Reveal Greeting (enter name first!)')
+            : 'Reform the Luxurious Tree'}
         </button>
 
         <p className="instruction">
-          {state === 'TREE_SHAPE'
-            ? 'Click the button to scatter into your personalized greeting'
-            : 'Click again to reform the luxurious tree'}
+          Enter a name above, then click the button to scatter the tree into your personalized golden greeting!
         </p>
       </div>
 
@@ -44,7 +40,7 @@ function App() {
         <ambientLight intensity={0.4} color="#ffd700" />
         <pointLight position={[0, 10, 10]} intensity={2} color="#ffd700" />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
-        <ChristmasTree state={state} personName={personName} />
+        <ChristmasTree state={state} personName={personName || 'You'} />
         <OrbitControls enablePan={false} minDistance={8} maxDistance={20} />
         <Environment preset="night" />
         <EffectComposer>
