@@ -11,77 +11,84 @@ interface ChristmasTreeProps {
 }
 
 const ChristmasTree: React.FC<ChristmasTreeProps> = ({ state, personName }) => {
-  const count = 8000; // Total particles
+  const count = 12000; // More particles = clearer text & fuller tree
   const meshRef = useRef<InstancedMesh>(null);
 
-  // Simple letter segment definitions (capital letters, line segments)
+  // Simple block-letter segments for reliability
   const letterSegments: Record<string, Vector3[][]> = {
-    'M': [[[0,0,0],[0,4,0],[1,6,0],[2,4,0],[2,0,0]], [[0,4,0],[1,5,0]], [[2,4,0],[1,5,0]]],
-    'E': [[[0,0,0],[0,6,0]], [[0,0,0],[3,0,0]], [[0,3,0],[2.5,3,0]], [[0,6,0],[3,6,0]]],
-    'R': [[[0,0,0],[0,6,0]], [[0,6,0],[3,6,0]], [[0,3,0],[2.5,3,0]], [[0,4,0],[2,2,0],[3,0,0]]],
-    'Y': [[[0,6,0],[1.5,3,0],[3,6,0]], [[1.5,3,0],[1.5,0,0]]],
-    'C': [[[3,6,0],[1,6,0],[0,5,0],[0,1,0],[1,0,0],[3,0,0]]],
-    'H': [[[0,0,0],[0,6,0]], [[0,3,0],[3,3,0]], [[3,0,0],[3,6,0]]],
-    'I': [[[0,6,0],[3,6,0]], [[1.5,6,0],[1.5,0,0]], [[0,0,0],[3,0,0]]],
-    'S': [[[3,6,0],[1,6,0],[0,4.5,0],[2,3,0],[3,1.5,0],[1,0,0],[0,0,0]]],
-    'T': [[[0,6,0],[3,6,0]], [[1.5,6,0],[1.5,0,0]]],
-    'A': [[[0,0,0],[1.5,6,0],[3,0,0]], [[0,3,0],[3,3,0]]],
-    // Add more if needed, but this covers "MERRY CHRISTMAS"
+    'M': [[[0,0,0],[0,6,0],[1.5,8,0],[3,6,0],[3,0,0]], [[1.5,4,0],[1.5,8,0]]],
+    'E': [[[3,0,0],[0,0,0],[0,8,0],[3,8,0]], [[0,4,0],[2.5,4,0]]],
+    'R': [[[0,0,0],[0,8,0],[2,8,0],[3,6,0],[2.5,4,0],[3,2,0]], [[1.5,4,0],[3,4,0]]],
+    'Y': [[[0,8,0],[1.5,4,0],[3,8,0]], [[1.5,4,0],[1.5,0,0]]],
+
+    'C': [[[3,8,0],[1,8,0],[0,7,0],[0,1,0],[1,0,0],[3,0,0]]],
+    'H': [[[0,0,0],[0,8,0]], [[0,4,0],[3,4,0]], [[3,0,0],[3,8,0]]],
+    'I': [[[0,8,0],[3,8,0]], [[1.5,8,0],[1.5,0,0]], [[0,0,0],[3,0,0]]],
+    'S': [[[0,8,0],[1,8,0],[3,6,0],[2,4,0],[3,2,0],[1,0,0],[0,0,0]]],
+    'T': [[[0,8,0],[3,8,0]], [[1.5,8,0],[1.5,0,0]]],
+    'A': [[[0,0,0],[1.5,8,0],[3,0,0]], [[0,4,0],[3,4,0]]],
   };
 
-  const { treePositions, textPositions } = useMemo(() => {
+  const { treePositions, textPositions, currentPositions } = useMemo(() => {
     const treePos: Vector3[] = [];
     const textPos: Vector3[] = [];
+    const currPos: Vector3[] = [];
 
-    // Tree positions (conical)
-    const treeHeight = 8;
-    const treeRadius = 3.5;
+    // Tree: Conical Christmas tree
+    const treeHeight = 10;
+    const treeRadius = 4.5;
     for (let i = 0; i < count; i++) {
-      const y = Math.random() * treeHeight - treeHeight / 2;
-      const radiusAtY = treeRadius * (1 - (y + treeHeight / 2) / treeHeight);
+      const y = (Math.random() - 0.5) * treeHeight;
+      const radiusAtY = treeRadius * (1 - Math.abs(y + treeHeight / 2) / treeHeight);
       const angle = Math.random() * Math.PI * 2;
-      treePos.push(new Vector3(radiusAtY * Math.cos(angle), y, radiusAtY * Math.sin(angle)));
+      const x = radiusAtY * Math.cos(angle);
+      const z = radiusAtY * Math.sin(angle);
+      const pos = new Vector3(x, y, z);
+      treePos.push(pos);
+      currPos.push(pos.clone()); // Start in tree shape
     }
 
-    // Text positions
-    const fullText = `MERRY CHRISTMAS ${personName.toUpperCase()}`.trim();
-    let offsetX = -20; // Start left
-    const letterSpacing = 5;
-    const scale = 0.8;
+    // Text: "MERRY CHRISTMAS [Name]"
+    const fullText = `MERRY CHRISTMAS ${personName.toUpperCase()}`;
+    let offsetX = -45; // Center wide text
+    const letterWidth = 10;
+    const scale = 1.2;
 
     for (const char of fullText) {
       if (char === ' ') {
-        offsetX += letterSpacing;
+        offsetX += letterWidth;
         continue;
       }
       const segments = letterSegments[char] || [];
-      for (const seg of segments) {
-        for (const p of seg) {
+      for (const segment of segments) {
+        for (let t = 0; t <= 20; t++) { // Sample points along each line
           if (textPos.length >= count) break;
+          const ratio = t / 20;
+          const x = segment[0].x + (segment[1].x - segment[0].x) * ratio;
+          const y = segment[0].y + (segment[1].y - segment[0].y) * ratio;
           textPos.push(new Vector3(
-            (p.x * scale + offsetX),
-            p.y * scale - 3, // Center vertically
-            (Math.random() - 0.5) * 2 // Slight depth variation
+            x * scale + offsetX,
+            y * scale - 4,
+            (Math.random() - 0.5) * 3
           ));
         }
       }
-      offsetX += letterSpacing * 4;
+      offsetX += letterWidth;
     }
 
-    // Fill remaining with random positions if text uses fewer particles
+    // Fill remaining particles randomly around text
     while (textPos.length < count) {
       textPos.push(new Vector3(
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 20,
-        (Math.random() - 0.5) * 10
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 20
       ));
     }
 
-    return { treePositions: treePos, textPositions: textPos };
-  }, [personName, count]);
+    return { treePositions: treePos, textPositions: textPos, currentPositions: currPos };
+  }, [personName]);
 
-  const currentPositions = useMemo(() => treePositions.map(p => p.clone()), [treePositions]);
-
+  // Morph animation
   useEffect(() => {
     const targets = state === 'SCATTERED' ? textPositions : treePositions;
     currentPositions.forEach((pos, i) => {
@@ -89,47 +96,70 @@ const ChristmasTree: React.FC<ChristmasTreeProps> = ({ state, personName }) => {
         x: targets[i].x,
         y: targets[i].y,
         z: targets[i].z,
-        duration: 3 + Math.random() * 1.5,
-        delay: Math.random() * 0.5,
+        duration: 4,
+        delay: Math.random() * 0.8,
         ease: 'power3.inOut',
       });
     });
   }, [state, textPositions, treePositions, currentPositions]);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!meshRef.current) return;
+
     const matrix = new Matrix4();
     const rot = new Euler();
 
     for (let i = 0; i < count; i++) {
       const pos = currentPositions[i];
+
+      // Gentle float in scattered mode
       if (state === 'SCATTERED') {
-        pos.x += Math.sin(Date.now() * 0.0005 + i) * 0.003 * delta * 60;
-        pos.y += Math.cos(Date.now() * 0.0004 + i) * 0.002 * delta * 60;
+        pos.y += Math.sin(Date.now() * 0.001 + i) * 0.005;
       }
+
       rot.set(
-        Math.random() * Math.PI,
-        Date.now() * 0.0002 + i * 0.1,
+        Math.PI / 2 + Math.random() * 0.5,
+        Date.now() * 0.0003 + i * 0.05,
         0
       );
-      matrix.compose(pos, rot.toVector3(), new Vector3(0.08, 0.08, 0.08));
+
+      matrix.compose(
+        pos,
+        rot.toVector3(),
+        new Vector3(0.18, 0.18, 0.18) // Bigger, brighter particles
+      );
+
       meshRef.current.setMatrixAt(i, matrix);
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
-  // Golden star on top (visible in tree state)
   return (
     <>
+      {/* Golden star on tree */}
       {state === 'TREE_SHAPE' && (
-        <mesh position={[0, 4.5, 0]}>
-          <coneGeometry args={[0.8, 2, 5]} />
-          <meshStandardMaterial color="#ffd700" emissive="#ffd700" emissiveIntensity={2} metalness={0.9} roughness={0.1} />
+        <mesh position={[0, 6, 0]}>
+          <coneGeometry args={[1.2, 3, 8]} />
+          <meshStandardMaterial 
+            color="#ffd700" 
+            emissive="#ffd700" 
+            emissiveIntensity={4} 
+            metalness={1} 
+            roughness={0.1} 
+          />
         </mesh>
       )}
+
+      {/* Particles: Emerald with golden glow */}
       <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
-        <dodecahedronGeometry args={[0.15]} />
-        <meshStandardMaterial color="#004d00" metalness={0.3} roughness={0.6} emissive="#ffd700" emissiveIntensity={0.3} />
+        <dodecahedronGeometry args={[0.2]} />
+        <meshStandardMaterial
+          color="#004d20"
+          emissive="#ffd700"
+          emissiveIntensity={0.8}
+          metalness={0.6}
+          roughness={0.4}
+        />
       </instancedMesh>
     </>
   );
